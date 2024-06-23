@@ -6,7 +6,7 @@ import random
 import numpy as np
 import albumentations as A
 
-GEN_CNT = 1000
+GEN_CNT = 500
 DO_GENERATES = True
 
 def create_target_images_with_border(target_dir, generate_dir, size=(50, 50), black_border_thickness=2, background_border_thickness=10):
@@ -19,9 +19,6 @@ def create_target_images_with_border(target_dir, generate_dir, size=(50, 50), bl
         
         # Add black border
         bordered_img = cv2.copyMakeBorder(resized_img, black_border_thickness, black_border_thickness, black_border_thickness, black_border_thickness, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-        
-        # Add background color border (more thicker)
-        # bordered_img_with_bg = cv2.copyMakeBorder(bordered_img, background_border_thickness, background_border_thickness, background_border_thickness, background_border_thickness, cv2.BORDER_CONSTANT, value=(255, 255, 255))
         
         target_name = os.path.basename(target_file)
         cv2.imwrite(os.path.join(generate_dir, target_name), bordered_img)
@@ -72,8 +69,8 @@ def generate_fhd_image_with_targets(image_index, target_generate_dir, output_dir
     positions = []
     annotations = []
 
-    # 무작위 배경색 생성
-    background_color = tuple(random.randint(0, 255) for _ in range(3))
+    # 흰색 배경 생성
+    background_color = (255, 255, 255)
     
     # Create a background image with the specified color
     image = np.ones((image_size[1], image_size[0], 3), dtype=np.uint8) * np.array(background_color, dtype=np.uint8)
