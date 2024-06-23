@@ -6,7 +6,7 @@ import random
 import numpy as np
 import albumentations as A
 
-GEN_CNT = 500
+GEN_CNT = 1000
 DO_GENERATES = True
 
 def create_target_images_with_border(target_dir, generate_dir, size=(50, 50), black_border_thickness=2, background_border_thickness=10):
@@ -69,8 +69,10 @@ def generate_fhd_image_with_targets(image_index, target_generate_dir, output_dir
     positions = []
     annotations = []
 
-    # 흰색 배경 생성
-    background_color = (255, 255, 255)
+    # 그레이 계열 랜덤 배경 생성
+    gray_value = random.randint(100, 200)  # 100부터 200 사이의 값으로 설정
+    background_color = (gray_value, gray_value, gray_value)
+
     
     # Create a background image with the specified color
     image = np.ones((image_size[1], image_size[0], 3), dtype=np.uint8) * np.array(background_color, dtype=np.uint8)
@@ -171,11 +173,11 @@ if __name__ == "__main__":
             "images": annotations_list
         }
         
-        with open(os.path.join(output_dir, "annotations.json"), "w") as json_file:
+        with open(os.path.join(output_dir, "labels.json"), "w") as json_file:
             json.dump(json_output, json_file, indent=4)
 
-        print(f"Generated images and annotation JSON saved at {output_dir}")
+        print(f"Generated images and labels JSON saved at {output_dir}")
 
     # Draw annotations for all images
     else:
-        draw_annotations_for_all_images(os.path.join(output_dir, "annotations.json"), output_dir)
+        draw_annotations_for_all_images(os.path.join(output_dir, "labels.json"), output_dir)
