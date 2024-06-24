@@ -6,7 +6,7 @@ import random
 import numpy as np
 import albumentations as A
 
-GEN_CNT = 1000
+GEN_CNT = 500
 DO_GENERATES = True
 
 def create_target_images_with_border(target_dir, generate_dir, size=(50, 50), black_border_thickness=2, background_border_thickness=10):
@@ -41,11 +41,13 @@ def apply_augmentation(image):
             A.Perspective(scale=(0.02, 0.05), p=0.3),  # Reduced perspective scale
             A.Affine(scale=(0.95, 1.05), translate_percent=(-0.05, 0.05), rotate=(-7, 7), shear=(-5, 5), p=0.5),  # Reduced affine transformations
         ], p=0.5),
+        A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=0.5),  # Adjust hue, saturation, and brightness
     ])
 
     transformed = transform(image=image)
 
     return transformed['image']
+
 
 def is_too_close(bbox1, bbox2):
     cx1, cy1 = (bbox1[0] + bbox1[2]) // 2, (bbox1[1] + bbox1[3]) // 2
@@ -70,9 +72,11 @@ def generate_fhd_image_with_targets(image_index, target_generate_dir, output_dir
     annotations = []
 
     # 그레이 계열 랜덤 배경 생성
-    gray_value = random.randint(100, 200)  # 100부터 200 사이의 값으로 설정
-    background_color = (gray_value, gray_value, gray_value)
+    # gray_value = random.randint(80, 255)  # 100부터 200 사이의 값으로 설정
+    # background_color = (gray_value, gray_value, gray_value)
 
+    # 무작위 배경색 생성 (RGB)
+    background_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     
     # Create a background image with the specified color
     image = np.ones((image_size[1], image_size[0], 3), dtype=np.uint8) * np.array(background_color, dtype=np.uint8)
@@ -95,8 +99,8 @@ def generate_fhd_image_with_targets(image_index, target_generate_dir, output_dir
                 # Apply augmentation
                 augmented_img = apply_augmentation(target_img)
                 
-                # Randomly scale the image between -10% and +100%
-                scale_factor = random.uniform(0.9, 2.0)
+                # Randomly scale the image between -20% and +100%
+                scale_factor = random.uniform(0.8, 2.0)
                 new_size = (int((target_size[0] + 4 * border_thickness) * scale_factor), int((target_size[1] + 4 * border_thickness) * scale_factor))
                 resized_augmented_img = cv2.resize(augmented_img, new_size)
                 
