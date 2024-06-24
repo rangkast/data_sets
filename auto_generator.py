@@ -6,7 +6,7 @@ import random
 import numpy as np
 import albumentations as A
 
-GEN_CNT = 1000
+GEN_CNT = 2000
 DO_GENERATES = True
 
 def create_target_images_with_border(target_dir, generate_dir, size=(50, 50), black_border_thickness=2, background_border_thickness=10):
