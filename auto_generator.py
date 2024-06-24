@@ -6,7 +6,7 @@ import random
 import numpy as np
 import albumentations as A
 
-GEN_CNT = 2000
+GEN_CNT = 1000
 DO_GENERATES = True
 
 def create_target_images_with_border(target_dir, generate_dir, size=(50, 50), black_border_thickness=2, background_border_thickness=10):
@@ -32,16 +32,16 @@ def apply_augmentation(image):
         ], p=0.5),
         A.OneOf([
             A.CLAHE(clip_limit=2),
-            A.RandomBrightnessContrast(p=0.2),
-            A.RandomGamma(p=0.2),
+            A.RandomBrightnessContrast(p=0.3),
+            A.RandomGamma(p=0.3),
         ], p=0.3),
-        A.HueSaturationValue(p=0.3),
+        A.HueSaturationValue(p=0.35),
         A.Rotate(limit=15, p=0.3, border_mode=cv2.BORDER_CONSTANT, value=(192, 197, 191)),  # Rotation limit reduced to 15 degrees
         A.OneOf([
-            A.Perspective(scale=(0.02, 0.05), p=0.3),  # Reduced perspective scale
+            A.Perspective(scale=(0.02, 0.045), p=0.3),  # Reduced perspective scale
             A.Affine(scale=(0.95, 1.05), translate_percent=(-0.05, 0.05), rotate=(-7, 7), shear=(-5, 5), p=0.5),  # Reduced affine transformations
         ], p=0.5),
-        A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=0.5),  # Adjust hue, saturation, and brightness
+        A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=0.6),  # Adjust hue, saturation, and brightness
     ])
 
     transformed = transform(image=image)
@@ -62,24 +62,27 @@ def is_too_close(bbox1, bbox2):
     
     return distance < min_distance
 
-def generate_fhd_image_with_targets(image_index, target_generate_dir, output_dir, num_targets=10, image_size=(1920, 1080), target_size=(50, 50), border_thickness=2, padding=20):
+def generate_fhd_image_with_targets(image_index, target_generate_dir, output_dir, backgrounds_dir, num_targets=10, image_size=(1920, 1080), target_size=(50, 50), border_thickness=2, padding=20):
     target_files = sorted(glob.glob("{}/*.jpg".format(target_generate_dir)))
+    background_files = sorted(glob.glob("{}/*.jpg".format(backgrounds_dir)))
+    
     if len(target_files) < num_targets:
         raise ValueError("Not enough target images to generate {} targets.".format(num_targets))
     
+    if len(background_files) == 0:
+        raise ValueError("No background images found in the backgrounds directory.")
     
     positions = []
     annotations = []
 
-    # 그레이 계열 랜덤 배경 생성
-    # gray_value = random.randint(80, 255)  # 100부터 200 사이의 값으로 설정
-    # background_color = (gray_value, gray_value, gray_value)
-
-    # 무작위 배경색 생성 (RGB)
-    background_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    # 무작위 배경 이미지 선택
+    background_image_path = random.choice(background_files)
+    background_image = cv2.imread(background_image_path)
+    if background_image.shape[:2] != image_size:
+        background_image = cv2.resize(background_image, image_size)
     
-    # Create a background image with the specified color
-    image = np.ones((image_size[1], image_size[0], 3), dtype=np.uint8) * np.array(background_color, dtype=np.uint8)
+    # Create a background image with the selected background
+    image = background_image.copy()
     
     for i in range(num_targets):
         attempts = 0
@@ -99,8 +102,8 @@ def generate_fhd_image_with_targets(image_index, target_generate_dir, output_dir
                 # Apply augmentation
                 augmented_img = apply_augmentation(target_img)
                 
-                # Randomly scale the image between -20% and +100%
-                scale_factor = random.uniform(0.8, 2.0)
+                # Randomly scale the image between -25% and +150%
+                scale_factor = random.uniform(0.75, 2.5)
                 new_size = (int((target_size[0] + 4 * border_thickness) * scale_factor), int((target_size[1] + 4 * border_thickness) * scale_factor))
                 resized_augmented_img = cv2.resize(augmented_img, new_size)
                 
@@ -162,6 +165,7 @@ if __name__ == "__main__":
     target_dir = os.path.join(script_dir, "Targets")
     target_generate_dir = os.path.join(script_dir, "Targets_generates")
     output_dir = os.path.join(script_dir, "generates_images")
+    backgrounds_dir = os.path.join(script_dir, "backgrounds")
     os.makedirs(output_dir, exist_ok=True)
 
     if DO_GENERATES == True:
@@ -170,7 +174,7 @@ if __name__ == "__main__":
         annotations_list = []
 
         for i in range(1, GEN_CNT+1):
-            annotation = generate_fhd_image_with_targets(i, target_generate_dir, output_dir)
+            annotation = generate_fhd_image_with_targets(i, target_generate_dir, output_dir, backgrounds_dir)
             annotations_list.append(annotation)
         
         json_output = {
