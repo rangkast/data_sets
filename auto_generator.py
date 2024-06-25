@@ -6,7 +6,7 @@ import random
 import numpy as np
 import albumentations as A
 
-GEN_CNT = 2000
+GEN_CNT = 3000
 DO_GENERATES = True
 
 def create_target_images_with_border(target_dir, generate_dir, size=(50, 50), black_border_thickness=2, background_border_thickness=10):
@@ -75,7 +75,6 @@ def generate_fhd_image_with_targets(image_index, target_generate_dir, output_dir
     positions = []
     annotations = []
 
-    # 무작위 배경 이미지 선택
     background_image_path = random.choice(background_files)
     background_image = cv2.imread(background_image_path)
     if background_image.shape[:2] != image_size:
