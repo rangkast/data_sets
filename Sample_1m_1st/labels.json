@@ -1,14 +1,6 @@
 {
     "images": [
         {
-            "file": "New_01.jpg",
-            "annotations": []
-        },
-        {
-            "file": "New_02.jpg",
-            "annotations": []
-        },
-        {
             "file": "New_1.jpg",
             "annotations": [
                 {
